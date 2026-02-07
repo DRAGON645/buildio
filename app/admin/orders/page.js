@@ -3,15 +3,28 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/context/AdminAuthContext'
-import { collection, getDocs, orderBy, query, updateDoc, doc } from 'firebase/firestore'
+import { useRef } from 'react'
+
 import { db } from '@/lib/firebase'
 import Barcode from 'react-barcode'
+import {
+  collection,
+  orderBy,
+  query,
+  updateDoc,
+  doc,
+  onSnapshot
+} from 'firebase/firestore'
+
 
 export default function AdminOrdersPage() {
   const { isAdmin, logout } = useAdminAuth()
   const router = useRouter()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const audioRef = useRef(null)
+const firstLoadRef = useRef(true)
+
 
   // 🔐 Protect route
   useEffect(() => {
@@ -23,27 +36,37 @@ export default function AdminOrdersPage() {
 
   // 🔥 Load orders from Firestore
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const q = query(
-          collection(db, 'orders'),
-          orderBy('createdAt', 'desc')
-        )
-        const snapshot = await getDocs(q)
-        const list = snapshot.docs.map(d => ({
-          id: d.id,
-          ...d.data()
-        }))
-        setOrders(list)
-      } catch (err) {
-        console.error('Failed to fetch orders', err)
-      } finally {
-        setLoading(false)
-      }
-    }
+  if (!isAdmin) return
 
-    if (isAdmin) fetchOrders()
-  }, [isAdmin])
+  const q = query(
+    collection(db, 'orders'),
+    orderBy('createdAt', 'desc')
+  )
+
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const list = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }))
+
+      if (firstLoadRef.current && list.length > orders.length) {
+        audioRef.current?.play()
+      }
+      setOrders(list)
+      setLoading(false)
+    },
+    (error) => {
+      console.error('Realtime orders error:', error)
+      setLoading(false)
+    }
+  )
+
+  // cleanup on unmount
+  return () => unsubscribe()
+}, [isAdmin])
+
 
   // 🔁 UPDATE ORDER STATUS
   const updateOrderStatus = async (orderId, newStatus) => {
@@ -77,6 +100,10 @@ export default function AdminOrdersPage() {
 
   return (
     <main className="bg-gray-100 min-h-screen p-6 text-black">
+
+    <audio ref={audioRef} src="/notification.mp3" preload="auto" />
+
+
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6 print:hidden">
         <h1 className="text-3xl font-bold">
