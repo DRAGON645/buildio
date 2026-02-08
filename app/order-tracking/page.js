@@ -5,6 +5,22 @@ import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Navbar from '@/components/Navbar'
 
+/* ✅ STATUS COLOR HELPER (MISSING PART) */
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'PLACED':
+      return 'bg-yellow-100 text-yellow-800'
+    case 'PACKED':
+      return 'bg-blue-100 text-blue-800'
+    case 'SHIPPED':
+      return 'bg-purple-100 text-purple-800'
+    case 'DELIVERED':
+      return 'bg-green-100 text-green-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
 export default function OrderTrackingPage() {
   const [orderId, setOrderId] = useState('')
   const [phone, setPhone] = useState('')
@@ -92,9 +108,17 @@ export default function OrderTrackingPage() {
                 Order Details
               </h2>
 
-              <p className="text-sm mb-1">
-                <strong>Status:</strong> {order.status}
-              </p>
+              {/* STATUS */}
+              <div className="mb-2">
+                <span className="text-sm font-semibold mr-2">
+                  Status:
+                </span>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}
+                >
+                  {order.status}
+                </span>
+              </div>
 
               <p className="text-sm mb-1">
                 <strong>Payment:</strong> {order.paymentMethod}

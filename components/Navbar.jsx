@@ -19,6 +19,18 @@ export default function Navbar({ onMenuClick }) {
 
       <div className="flex gap-6 items-center">
         <Link href="/">Home</Link>
+
+      
+      <a
+  href="/order-tracking"
+  className="text-sm font-medium hover:text-purple-700"
+>
+  Track Order
+</a>
+
+
+
+
         <Link href="/cart" className="relative">
           🛒 My Cart
           {itemCount > 0 && (
