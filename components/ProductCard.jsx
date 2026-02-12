@@ -14,13 +14,24 @@ export default function ProductCard({ product }) {
       transition={{ type: 'spring', stiffness: 300 }}
       className="bg-white rounded-lg shadow p-4 w-64 text-black"
     >
-      <img
-        src={product.image}
-        alt={product.name}
-        onClick={() => router.push(`/product/${product.id}`)}
-        className="h-32 mx-auto object-contain cursor-pointer"
-      />
+      {/* IMAGE */}
+      {product.image ? (
+        <img
+          src={product.image}
+          alt={product.name}
+          onClick={() => router.push(`/product/${product.id}`)}
+          className="h-32 mx-auto object-contain cursor-pointer"
+        />
+      ) : (
+        <div
+          onClick={() => router.push(`/product/${product.id}`)}
+          className="h-32 flex items-center justify-center bg-gray-100 text-gray-400 text-sm cursor-pointer"
+        >
+          No Image
+        </div>
+      )}
 
+      {/* NAME */}
       <h3
         onClick={() => router.push(`/product/${product.id}`)}
         className="mt-3 font-semibold text-sm cursor-pointer hover:text-purple-700"
@@ -28,10 +39,12 @@ export default function ProductCard({ product }) {
         {product.name}
       </h3>
 
+      {/* PRICE */}
       <p className="text-purple-700 font-bold mt-1">
         ₹{product.price}
       </p>
 
+      {/* BUTTON */}
       {product.stock === 0 ? (
         <button
           disabled
@@ -42,8 +55,7 @@ export default function ProductCard({ product }) {
       ) : (
         <button
           onClick={() => addToCart(product)}
-          className="mt-3 w-full bg-purple-700 text-white py-2 rounded
-                     hover:bg-purple-800 transition"
+          className="mt-3 w-full bg-purple-700 text-white py-2 rounded hover:bg-purple-800 transition"
         >
           Add to Cart
         </button>

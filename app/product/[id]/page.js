@@ -36,11 +36,17 @@ export default function ProductDetailPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* IMAGE */}
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-64 object-contain"
-            />
+            {product.image ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-64 object-contain"
+              />
+            ) : (
+              <div className="w-full h-64 flex items-center justify-center bg-gray-100 text-gray-400">
+                No Image Available
+              </div>
+            )}
 
             {/* DETAILS */}
             <div>

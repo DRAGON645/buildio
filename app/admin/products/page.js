@@ -10,14 +10,6 @@ export default function AdminProductsPage() {
   const { isAdmin, logout } = useAdminAuth()
   const router = useRouter()
 
-  // 🔐 PROTECT ROUTE
-  useEffect(() => {
-    if (!isAdmin) {
-      localStorage.setItem('adminRedirect', '/admin/products')
-      router.push('/admin/login')
-    }
-  }, [isAdmin, router])
-
   const [editingId, setEditingId] = useState(null)
 
   const [form, setForm] = useState({
@@ -30,6 +22,47 @@ export default function AdminProductsPage() {
     specs: '',
     description: ''
   })
+
+  // 🔐 PROTECT ROUTE
+  useEffect(() => {
+    if (!isAdmin) {
+      localStorage.setItem('adminRedirect', '/admin/products')
+      router.push('/admin/login')
+    }
+  }, [isAdmin, router])
+
+  if (!isAdmin) return null
+
+  // 🔥 CLOUDINARY UPLOAD
+  const uploadImage = async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', 'buildio_unsigned')
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/dujkuppj3/image/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      )
+
+      const data = await res.json()
+
+      if (!data.secure_url) {
+        console.error('Upload failed:', data)
+        alert('Upload failed')
+        return null
+      }
+
+      return data.secure_url
+    } catch (err) {
+      console.error('Image upload failed', err)
+      alert('Image upload failed')
+      return null
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -52,9 +85,6 @@ export default function AdminProductsPage() {
     })
     setEditingId(null)
   }
-console.log('Products from context:', products)
-console.log('deleteProduct fn:', deleteProduct)
-console.log('updateProduct fn:', updateProduct)
 
   const handleSubmit = async () => {
     if (!form.name || !form.price || !form.category) {
@@ -62,11 +92,16 @@ console.log('updateProduct fn:', updateProduct)
       return
     }
 
+    if (!form.image) {
+      alert('Please upload an image')
+      return
+    }
+
     const productData = {
       name: form.name,
       price: Number(form.price),
       category: form.category,
-      image: form.image || '/sensor.png',
+      image: form.image,
       stock: Number(form.stock) || 0,
       featured: form.featured,
       specs: form.specs ? form.specs.split('\n') : [],
@@ -88,7 +123,7 @@ console.log('updateProduct fn:', updateProduct)
       name: product.name,
       price: product.price,
       category: product.category,
-      image: product.image,
+      image: product.image || '',
       stock: product.stock,
       featured: product.featured,
       specs: product.specs?.join('\n') || '',
@@ -97,14 +132,9 @@ console.log('updateProduct fn:', updateProduct)
   }
 
   const handleDelete = async (id) => {
-  console.log('Deleting product ID:', id)
-  if (!confirm('Delete this product?')) return
-  await deleteProduct(id)
-  console.log('Delete function finished')
-}
-
-
-  if (!isAdmin) return null
+    if (!confirm('Delete this product?')) return
+    await deleteProduct(id)
+  }
 
   return (
     <main className="bg-gray-50 min-h-screen p-6 text-black">
@@ -129,6 +159,7 @@ console.log('updateProduct fn:', updateProduct)
         </h2>
 
         <div className="grid md:grid-cols-2 gap-4">
+
           <input
             name="name"
             placeholder="Product Name"
@@ -154,13 +185,32 @@ console.log('updateProduct fn:', updateProduct)
             className="p-3 border rounded"
           />
 
+          {/* IMAGE UPLOAD */}
           <input
-            name="image"
-            placeholder="Image path"
-            value={form.image}
-            onChange={handleChange}
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const file = e.target.files[0]
+              if (!file) return
+
+              const imageUrl = await uploadImage(file)
+              if (imageUrl) {
+                setForm(prev => ({
+                  ...prev,
+                  image: imageUrl
+                }))
+              }
+            }}
             className="p-3 border rounded"
           />
+
+          {form.image && (
+            <img
+              src={form.image}
+              alt="Preview"
+              className="mt-3 h-24 object-contain"
+            />
+          )}
 
           <input
             name="stock"
