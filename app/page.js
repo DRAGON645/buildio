@@ -16,7 +16,6 @@ export default function Home() {
 
   const featuredProducts = products.filter(p => p.featured)
 
-  // 🔥 Show only 8 categories on home
   const homeCategories = categories
     .filter(cat => cat.showOnHome)
     .slice(0, 8)
@@ -28,33 +27,57 @@ export default function Home() {
 
       <main className="p-6 bg-gray-50 min-h-screen text-black">
 
-        {/* AD BANNER */}
         <AdBanner />
 
-        {/* 🔥 DYNAMIC CATEGORIES */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {homeCategories.map(cat => (
-            <Link
-              key={cat.id}
-              href={`/category/${cat.slug}`}
-              className="bg-white p-4 rounded shadow hover:shadow-md transition text-center"
-            >
-              <p className="font-semibold">{cat.name}</p>
-            </Link>
-          ))}
-        </div>
+        {/* 🔥 CATEGORIES SECTION */}
+        <div className="mb-8">
 
-        {/* View All if more than 8 */}
-        {categories.filter(cat => cat.showOnHome).length > 8 && (
-          <div className="text-center mb-8">
-            <Link
-              href="/categories"
-              className="text-purple-700 font-semibold hover:underline"
-            >
-              View All Categories →
-            </Link>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-bold text-gray-900">
+              Categories
+            </h2>
+
+            {categories.filter(cat => cat.showOnHome).length > 8 && (
+              <Link
+                href="/categories"
+                className="text-purple-700 text-sm font-semibold hover:underline"
+              >
+                View All →
+              </Link>
+            )}
           </div>
-        )}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {homeCategories.map(cat => (
+              <Link
+                key={cat.id}
+                href={`/category/${cat.slug}`}
+                className="relative h-20 rounded-lg overflow-hidden shadow-sm group transition"
+              >
+
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-700 to-indigo-700" />
+
+                {cat.image && (
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="absolute inset-0 w-full h-full object-cover opacity-25"
+                  />
+                )}
+
+                <div className="absolute inset-0 bg-black/40" />
+
+                <div className="relative z-10 flex items-center justify-center h-full">
+                  <h3 className="text-white text-xs md:text-sm font-medium tracking-wide">
+                    {cat.name}
+                  </h3>
+                </div>
+
+              </Link>
+            ))}
+          </div>
+
+        </div>
 
         {/* FEATURED PRODUCTS */}
         <h2 className="text-xl font-bold mb-4 text-black">
@@ -72,6 +95,7 @@ export default function Home() {
             ))}
           </div>
         )}
+
       </main>
     </>
   )
