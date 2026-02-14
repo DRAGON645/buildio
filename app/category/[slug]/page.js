@@ -1,50 +1,79 @@
 'use client'
 
-import { useParams } from 'next/navigation'
-import { useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { useCategories } from '@/context/CategoryContext'
 import Navbar from '@/components/Navbar'
 import Sidebar from '@/components/Sidebar'
-import ProductCard from '@/components/ProductCard'
-import { useProducts } from '@/context/ProductContext'
+import { useState } from 'react'
 
 export default function CategoryPage() {
   const { slug } = useParams()
-  const { products } = useProducts()
+  const { categories } = useCategories()
+  const router = useRouter()
 
-  // ✅ SIDEBAR STATE (MISSING EARLIER)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const filteredProducts = products.filter(
-    p => p.category === slug
-  )
+  const category = categories.find(c => c.slug === slug)
+
+  if (!category) {
+    return (
+      <>
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <main className="p-6 text-black">Category not found</main>
+      </>
+    )
+  }
 
   return (
     <>
-      {/* NAVBAR WITH MENU CLICK */}
       <Navbar onMenuClick={() => setSidebarOpen(true)} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* SIDEBAR */}
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <main className="bg-gray-50 min-h-screen p-6 text-black">
+        <div className="max-w-6xl mx-auto">
 
-      <main className="p-6 bg-gray-50 min-h-screen text-black">
-        <h1 className="text-3xl font-bold mb-6 capitalize text-gray-900">
-          {slug}
-        </h1>
+          <h1 className="text-2xl font-bold mb-6">
+            {category.name}
+          </h1>
 
-        {filteredProducts.length === 0 ? (
-          <p className="text-gray-500">
-            No products found in this category.
-          </p>
-        ) : (
-          <div className="flex gap-6 flex-wrap">
-            {filteredProducts.map(p => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        )}
+          {category.subcategories?.length === 0 ? (
+            <p>No subcategories available.</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+
+              {category.subcategories.map(sub => (
+                <div
+                  key={sub.slug}
+                  onClick={() =>
+                    router.push(`/category/${category.slug}/${sub.slug}`)
+                  }
+                  className="cursor-pointer relative rounded-lg overflow-hidden shadow hover:scale-105 transition"
+                >
+                  {sub.image ? (
+                    <img
+                      src={sub.image}
+                      alt={sub.name}
+                      className="w-full h-40 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-40 bg-gray-200 flex items-center justify-center">
+                      No Image
+                    </div>
+                  )}
+
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <h2 className="text-white font-semibold text-lg">
+                      {sub.name}
+                    </h2>
+                  </div>
+                </div>
+              ))}
+
+            </div>
+          )}
+
+        </div>
       </main>
     </>
   )

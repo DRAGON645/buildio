@@ -1,54 +1,65 @@
 'use client'
-import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
 
-const categories = [
-  { name: 'Sensors', slug: 'sensors' },
-  { name: 'Motors', slug: 'motors' },
-  { name: 'Batteries', slug: 'batteries' },
-  { name: 'Displays', slug: 'displays' },
-  { name: 'Controllers', slug: 'controllers' },
-  { name: 'Power Modules', slug: 'power-modules' }
-]
+import { useState } from 'react'
+import Link from 'next/link'
+import { useCategories } from '@/context/CategoryContext'
 
 export default function Sidebar({ open, onClose }) {
-  const router = useRouter()
-
-  if (!open) return null
+  const { categories } = useCategories()
+  const [openCategory, setOpenCategory] = useState(null)
 
   return (
-    <>
-      <div
-        onClick={onClose}
-        className="fixed inset-0 bg-black/40 z-40"
-      />
+    <div
+      className={`fixed top-0 left-0 h-full w-72 bg-white shadow-lg z-50
+      transform transition-transform duration-300
+      ${open ? 'translate-x-0' : '-translate-x-full'}`}
+    >
+      <div className="p-4 border-b flex justify-between items-center">
+        <h2 className="font-bold text-lg">Categories</h2>
+        <button onClick={onClose}>✕</button>
+      </div>
 
-      <motion.div
-        initial={{ x: -300 }}
-        animate={{ x: 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed top-0 left-0 h-full w-64 bg-white z-50 shadow-lg"
-      >
-        <div className="p-4 border-b font-semibold flex justify-between">
-          Categories
-          <button onClick={onClose}>✕</button>
-        </div>
+      <div className="p-4 space-y-2 overflow-y-auto h-full">
 
-        <ul className="p-4 space-y-3">
-          {categories.map(cat => (
-            <li
-              key={cat.slug}
-              onClick={() => {
-                router.push(`/category/${cat.slug}`)
-                onClose()
-              }}
-              className="cursor-pointer text-gray-800 hover:text-purple-700 transition"
+        {categories.map(cat => (
+          <div key={cat.id}>
+
+            {/* CATEGORY HEADER */}
+            <div
+              onClick={() =>
+                setOpenCategory(openCategory === cat.id ? null : cat.id)
+              }
+              className="flex justify-between items-center cursor-pointer p-2 rounded hover:bg-gray-100"
             >
-              {cat.name}
-            </li>
-          ))}
-        </ul>
-      </motion.div>
-    </>
+              <Link
+                href={`/category/${cat.slug}`}
+                className="font-medium"
+              >
+                {cat.name}
+              </Link>
+
+              {cat.subcategories?.length > 0 && (
+                <span>
+                  {openCategory === cat.id ? '▲' : '▼'}
+                </span>
+              )}
+            </div>
+
+            {/* SUBCATEGORIES */}
+            {openCategory === cat.id &&
+              cat.subcategories?.map((sub, index) => (
+                <Link
+                  key={index}
+                  href={`/category/${cat.slug}/${sub.slug}`}
+                  className="block ml-4 p-2 text-sm text-gray-600 hover:text-purple-700 hover:bg-gray-50 rounded transition"
+                >
+                  {sub.name}
+                </Link>
+              ))}
+          </div>
+        ))}
+
+      </div>
+    </div>
   )
 }

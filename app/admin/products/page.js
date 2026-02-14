@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProducts } from '@/context/ProductContext'
 import { useAdminAuth } from '@/context/AdminAuthContext'
+import { useCategories } from '@/context/CategoryContext'
 
 export default function AdminProductsPage() {
   const { products, addProduct, updateProduct, deleteProduct } = useProducts()
+  const { categories } = useCategories()
   const { isAdmin, logout } = useAdminAuth()
   const router = useRouter()
 
@@ -16,6 +18,7 @@ export default function AdminProductsPage() {
     name: '',
     price: '',
     category: '',
+    subcategory: '',
     image: '',
     stock: '',
     featured: false,
@@ -32,6 +35,11 @@ export default function AdminProductsPage() {
   }, [isAdmin, router])
 
   if (!isAdmin) return null
+
+  // 🔥 GET SELECTED CATEGORY OBJECT
+  const selectedCategory = categories.find(
+    c => c.slug === form.category
+  )
 
   // 🔥 CLOUDINARY UPLOAD
   const uploadImage = async (file) => {
@@ -77,6 +85,7 @@ export default function AdminProductsPage() {
       name: '',
       price: '',
       category: '',
+      subcategory: '',
       image: '',
       stock: '',
       featured: false,
@@ -100,7 +109,8 @@ export default function AdminProductsPage() {
     const productData = {
       name: form.name,
       price: Number(form.price),
-      category: form.category,
+      category: form.category,      
+      subcategory: form.subcategory,
       image: form.image,
       stock: Number(form.stock) || 0,
       featured: form.featured,
@@ -123,6 +133,7 @@ export default function AdminProductsPage() {
       name: product.name,
       price: product.price,
       category: product.category,
+      subcategory: product.subcategory || '',
       image: product.image || '',
       stock: product.stock,
       featured: product.featured,
@@ -138,6 +149,7 @@ export default function AdminProductsPage() {
 
   return (
     <main className="bg-gray-50 min-h-screen p-6 text-black">
+
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">
@@ -152,7 +164,7 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {/* ADD / EDIT FORM */}
+      {/* FORM */}
       <div className="bg-white p-6 rounded shadow mb-8">
         <h2 className="font-semibold mb-4">
           {editingId ? 'Edit Product' : 'Add Product'}
@@ -177,15 +189,47 @@ export default function AdminProductsPage() {
             className="p-3 border rounded"
           />
 
-          <input
+          {/* CATEGORY */}
+          <select
             name="category"
-            placeholder="Category"
             value={form.category}
-            onChange={handleChange}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                category: e.target.value,
+                subcategory: ''
+              })
+            }
             className="p-3 border rounded"
-          />
+          >
+            <option value="">Select Category</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.slug}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
 
-          {/* IMAGE UPLOAD */}
+          {/* SUBCATEGORY */}
+        <select
+  name="subcategory"
+  value={form.subcategory}
+  onChange={handleChange}
+  className="p-3 border rounded"
+  disabled={!selectedCategory}
+>
+    <option value="">Select Subcategory</option>
+
+  {selectedCategory?.subcategories?.map((sub, i) => (
+  <option key={i} value={sub.slug}>
+    {sub.name}
+  </option>
+))}
+
+</select>
+
+
+          {/* IMAGE */}
           <input
             type="file"
             accept="image/*"
@@ -281,7 +325,7 @@ export default function AdminProductsPage() {
             <div>
               <p className="font-semibold">{p.name}</p>
               <p className="text-sm text-gray-600">
-                ₹{p.price} · {p.category} · Stock: {p.stock}
+                ₹{p.price} · {p.category} / {p.subcategory} · Stock: {p.stock}
               </p>
             </div>
 

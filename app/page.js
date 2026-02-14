@@ -4,36 +4,22 @@ import { useState } from 'react'
 import Navbar from '@/components/Navbar'
 import Sidebar from '@/components/Sidebar'
 import ProductCard from '@/components/ProductCard'
-import CategoryCard from '@/components/CategoryCard'
 import AdBanner from '@/components/AdBanner'
 import { useProducts } from '@/context/ProductContext'
-import { collection, addDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-
+import { useCategories } from '@/context/CategoryContext'
+import Link from 'next/link'
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { products } = useProducts()
+  const { categories } = useCategories()
 
   const featuredProducts = products.filter(p => p.featured)
 
-  const testFirebase = async () => {
-  try {
-    await addDoc(collection(db, 'test'), {
-      message: 'Firebase connected',
-      createdAt: new Date()
-    })
-    alert('Firebase connected successfully!')
-  } catch (err) {
-    console.error(err)
-    alert('Firebase connection failed')
-  }
-}
-
-
-
-
-
+  // 🔥 Show only 8 categories on home
+  const homeCategories = categories
+    .filter(cat => cat.showOnHome)
+    .slice(0, 8)
 
   return (
     <>
@@ -45,29 +31,30 @@ export default function Home() {
         {/* AD BANNER */}
         <AdBanner />
 
-        {/* CATEGORIES */}
+        {/* 🔥 DYNAMIC CATEGORIES */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            'Sensors',
-            'Motors',
-            'Batteries',
-            'Displays',
-            'Controllers',
-            'Power Modules'
-          ].map(cat => (
-            <CategoryCard key={cat} name={cat} />
+          {homeCategories.map(cat => (
+            <Link
+              key={cat.id}
+              href={`/category/${cat.slug}`}
+              className="bg-white p-4 rounded shadow hover:shadow-md transition text-center"
+            >
+              <p className="font-semibold">{cat.name}</p>
+            </Link>
           ))}
         </div>
 
-
-
-        <button
-  onClick={testFirebase}
-  className="mb-4 bg-black text-white px-4 py-2 rounded"
->
-  Test Firebase
-</button>
-
+        {/* View All if more than 8 */}
+        {categories.filter(cat => cat.showOnHome).length > 8 && (
+          <div className="text-center mb-8">
+            <Link
+              href="/categories"
+              className="text-purple-700 font-semibold hover:underline"
+            >
+              View All Categories →
+            </Link>
+          </div>
+        )}
 
         {/* FEATURED PRODUCTS */}
         <h2 className="text-xl font-bold mb-4 text-black">
