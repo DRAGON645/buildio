@@ -149,12 +149,26 @@ export default function AdminCategoriesPage() {
         </h2>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <input
-            placeholder="Category Name"
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-            className="p-3 border rounded"
-          />
+        <input
+  placeholder="Category Name"
+  value={form.name}
+  onChange={e => {
+    const name = e.target.value
+    const slug = name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')        // replace spaces with -
+      .replace(/[^\w-]+/g, '')     // remove special chars
+
+    setForm({
+      ...form,
+      name,
+      slug
+    })
+  }}
+  className="p-3 border rounded"
+/>
+
 
           <input
             placeholder="Slug (example: sensors)"
