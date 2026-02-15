@@ -6,19 +6,22 @@ import Link from 'next/link'
 
 const banners = [
   {
-    title: '🚀 Upgrade Your Robotics Setup',
-    subtitle: 'Premium Electronics • Fast Shipping • Trusted Components',
-    link: '/category/sensors'
+    title: 'Upgrade Your Robotics Setup',
+    subtitle: 'Premium Sensors & Smart Components',
+    link: '/category/sensors',
+    image: '/unnamed3.jpg'
   },
   {
-    title: '⚡ High Performance Drone Parts',
+    title: 'High Performance Drone Parts',
     subtitle: 'ESC • Propellers • Flight Controllers',
-    link: '/category/drone-parts'
+    link: '/category/drone-parts',
+    image: '/unnamed.jpg'
   },
   {
-    title: '🔋 Power Your Projects',
-    subtitle: 'Batteries • Power Modules • Smart Charging',
-    link: '/category/power-modules'
+    title: 'Power Your Innovation',
+    subtitle: 'Batteries • Power Modules • Controllers',
+    link: '/category/power-modules',
+    image: '/unnamed2.jpg'
   }
 ]
 
@@ -29,62 +32,71 @@ export default function AdBanner() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex(prev => (prev + 1) % banners.length)
-    }, 4000)
+    }, 5000)
 
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="relative overflow-hidden rounded-xl mb-10">
+    <div className="relative h-[220px] md:h-[300px] rounded-xl overflow-hidden mb-10">
 
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 opacity-95"></div>
-      <div className="absolute -inset-1 blur-2xl bg-purple-500 opacity-20 animate-pulse"></div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+          className="absolute inset-0"
+        >
+          {/* Background Image */}
+          <img
+            src={banners[index].image}
+            alt="Banner"
+            className="w-full h-full object-cover"
+          />
 
-      {/* Content */}
-      <div className="relative z-10 p-8 text-white text-center min-h-[160px] flex flex-col justify-center">
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-black/55"></div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-xl md:text-2xl font-bold tracking-wide">
+          {/* Purple Glow */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-700/40 to-indigo-700/40"></div>
+
+          {/* Content */}
+          <div className="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-6">
+            <h2 className="text-xl md:text-3xl font-bold">
               {banners[index].title}
             </h2>
 
-            <p className="mt-2 text-sm md:text-base text-purple-100">
+            <p className="mt-2 text-sm md:text-lg text-gray-200">
               {banners[index].subtitle}
             </p>
 
             <Link
               href={banners[index].link}
-              className="inline-block mt-5 px-6 py-2 bg-white text-purple-700 font-semibold rounded-lg shadow-lg hover:scale-105 transition"
+              className="mt-5 px-6 py-2 bg-purple-700 hover:bg-purple-800 rounded-lg font-semibold transition"
             >
               Explore →
             </Link>
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
-        {/* Dots */}
-        <div className="flex justify-center gap-2 mt-5">
-          {banners.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setIndex(i)}
-              className={`w-3 h-3 rounded-full transition ${
-                i === index
-                  ? 'bg-white'
-                  : 'bg-purple-300 opacity-60'
-              }`}
-            />
-          ))}
-        </div>
-
+      {/* Dots */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        {banners.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setIndex(i)}
+            className={`w-3 h-3 rounded-full transition ${
+              i === index
+                ? 'bg-white'
+                : 'bg-white/40'
+            }`}
+          />
+        ))}
       </div>
+
     </div>
   )
 }
