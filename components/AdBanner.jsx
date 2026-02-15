@@ -7,86 +7,86 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const banners = [
   {
+    id: 1,
     title: 'Premium Robotics Components',
-    subtitle: 'High performance parts for your next build',
+    subtitle: 'High quality sensors & modules',
     image: '/banner1.jpg',
     link: '/category/sensors'
   },
   {
-    title: 'Drone & Flight Systems',
-    subtitle: 'ESC, Propellers & Flight Controllers',
+    id: 2,
+    title: 'Advanced Drone Parts',
+    subtitle: 'ESC, Motors & Propellers',
     image: '/banner2.jpg',
     link: '/category/drone-parts'
   },
   {
-    title: 'Smart Power Solutions',
-    subtitle: 'Reliable batteries & power modules',
+    id: 3,
+    title: 'Power & Control Systems',
+    subtitle: 'Reliable & Industrial Grade',
     image: '/banner3.jpg',
-    link: '/category/power-modules'
+    link: '/category/controllers'
   }
 ]
 
 export default function AdBanner() {
-  const [index, setIndex] = useState(0)
+  const [current, setCurrent] = useState(0)
+  const [progressKey, setProgressKey] = useState(0)
 
+  const nextSlide = () => {
+    setCurrent((prev) => (prev + 1) % banners.length)
+    setProgressKey(prev => prev + 1)
+  }
+
+  const prevSlide = () => {
+    setCurrent((prev) =>
+      prev === 0 ? banners.length - 1 : prev - 1
+    )
+    setProgressKey(prev => prev + 1)
+  }
+
+  // Auto slide every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex(prev => (prev + 1) % banners.length)
+      nextSlide()
     }, 5000)
 
     return () => clearInterval(interval)
   }, [])
 
-  const nextSlide = () =>
-    setIndex(prev => (prev + 1) % banners.length)
-
-  const prevSlide = () =>
-    setIndex(prev =>
-      prev === 0 ? banners.length - 1 : prev - 1
-    )
-
   return (
-    <div className="relative w-full h-64 md:h-80 rounded-xl overflow-hidden mb-10 shadow-lg">
+    <div className="relative h-56 md:h-72 rounded-xl overflow-hidden mb-8 shadow-lg">
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={index}
+          key={current}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           className="absolute inset-0"
         >
-          {/* 🔥 Background Image with Subtle Zoom */}
-          <motion.div
-            initial={{ scale: 1 }}
-            animate={{ scale: 1.08 }}
-            transition={{ duration: 6, ease: 'easeInOut' }}
-            className="absolute inset-0"
-          >
-            <img
-              src={banners[index].image}
-              alt="Banner"
-              className="w-full h-full object-cover"
-            />
-          </motion.div>
+          <motion.img
+  src={banners[current].image}
+  alt="Banner"
+  initial={{ scale: 1 }}
+  animate={{ scale: 1.12 }}
+  transition={{ duration: 5, ease: 'linear' }}
+  className="w-full h-full object-cover"
+/>
 
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-black/40" />
-
-          {/* Text Content */}
-          <div className="relative z-10 h-full flex flex-col justify-center items-start px-8 text-white">
-            <h2 className="text-2xl md:text-4xl font-bold mb-2">
-              {banners[index].title}
+          <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center px-4">
+            <h2 className="text-white text-xl md:text-3xl font-bold mb-2">
+              {banners[current].title}
             </h2>
 
-            <p className="text-sm md:text-lg mb-4 opacity-90">
-              {banners[index].subtitle}
+            <p className="text-gray-200 text-sm md:text-base mb-4">
+              {banners[current].subtitle}
             </p>
 
             <Link
-              href={banners[index].link}
-              className="bg-purple-700 px-5 py-2 rounded hover:bg-purple-800 transition"
+              href={banners[current].link}
+              className="bg-purple-700 hover:bg-purple-800 text-white px-5 py-2 rounded transition"
             >
               Explore Now
             </Link>
@@ -94,21 +94,32 @@ export default function AdBanner() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Left Arrow */}
+      {/* LEFT BUTTON */}
       <button
         onClick={prevSlide}
-        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 p-2 rounded-full text-white z-20"
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60"
       >
         <ChevronLeft size={20} />
       </button>
 
-      {/* Right Arrow */}
+      {/* RIGHT BUTTON */}
       <button
         onClick={nextSlide}
-        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 p-2 rounded-full text-white z-20"
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60"
       >
         <ChevronRight size={20} />
       </button>
+
+      {/* 🔥 BOTTOM PROGRESS BAR */}
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20">
+        <motion.div
+          key={progressKey}
+          initial={{ width: '0%' }}
+          animate={{ width: '100%' }}
+          transition={{ duration: 5, ease: 'linear' }}
+          className="h-full bg-purple-600"
+        />
+      </div>
 
     </div>
   )
