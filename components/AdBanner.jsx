@@ -3,37 +3,43 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const banners = [
   {
     title: 'Upgrade Your Robotics Setup',
     subtitle: 'Premium Sensors & Smart Components',
     link: '/category/sensors',
-    image: '/unnamed3.jpg'
+    image: '/banner1.jpg'
   },
   {
     title: 'High Performance Drone Parts',
     subtitle: 'ESC • Propellers • Flight Controllers',
     link: '/category/drone-parts',
-    image: '/unnamed.jpg'
+    image: '/banner2.jpg'
   },
   {
     title: 'Power Your Innovation',
     subtitle: 'Batteries • Power Modules • Controllers',
     link: '/category/power-modules',
-    image: '/unnamed2.jpg'
+    image: '/banner3.jpg'
   }
 ]
 
 export default function AdBanner() {
   const [index, setIndex] = useState(0)
 
+  const nextSlide = () => {
+    setIndex(prev => (prev + 1) % banners.length)
+  }
+
+  const prevSlide = () => {
+    setIndex(prev => (prev - 1 + banners.length) % banners.length)
+  }
+
   // 🔥 Auto Slide
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex(prev => (prev + 1) % banners.length)
-    }, 5000)
-
+    const interval = setInterval(nextSlide, 5000)
     return () => clearInterval(interval)
   }, [])
 
@@ -82,16 +88,30 @@ export default function AdBanner() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Dots */}
+      {/* 🔥 LEFT ARROW */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full transition"
+      >
+        <ChevronLeft size={24} />
+      </button>
+
+      {/* 🔥 RIGHT ARROW */}
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full transition"
+      >
+        <ChevronRight size={24} />
+      </button>
+
+      {/* 🔥 DOTS */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
         {banners.map((_, i) => (
           <button
             key={i}
             onClick={() => setIndex(i)}
             className={`w-3 h-3 rounded-full transition ${
-              i === index
-                ? 'bg-white'
-                : 'bg-white/40'
+              i === index ? 'bg-white' : 'bg-white/40'
             }`}
           />
         ))}
