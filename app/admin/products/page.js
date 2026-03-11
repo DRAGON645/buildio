@@ -26,7 +26,6 @@ export default function AdminProductsPage() {
     description: ''
   })
 
-  // 🔐 PROTECT ROUTE
   useEffect(() => {
     if (!isAdmin) {
       localStorage.setItem('adminRedirect', '/admin/products')
@@ -36,12 +35,10 @@ export default function AdminProductsPage() {
 
   if (!isAdmin) return null
 
-  // 🔥 GET SELECTED CATEGORY OBJECT
   const selectedCategory = categories.find(
     c => c.slug === form.category
   )
 
-  // 🔥 CLOUDINARY UPLOAD
   const uploadImage = async (file) => {
     const formData = new FormData()
     formData.append('file', file)
@@ -109,13 +106,17 @@ export default function AdminProductsPage() {
     const productData = {
       name: form.name,
       price: Number(form.price),
-      category: form.category,      
+      category: form.category,
       subcategory: form.subcategory,
       image: form.image,
       stock: Number(form.stock) || 0,
       featured: form.featured,
       specs: form.specs ? form.specs.split('\n') : [],
-      description: form.description
+      description: form.description,
+
+      // ⭐ Rating system
+      rating: 0,
+      ratingCount: 0
     }
 
     if (editingId) {
@@ -150,7 +151,6 @@ export default function AdminProductsPage() {
   return (
     <main className="bg-gray-50 min-h-screen p-6 text-black">
 
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">
           Admin – Products
@@ -189,7 +189,6 @@ export default function AdminProductsPage() {
             className="p-3 border rounded"
           />
 
-          {/* CATEGORY */}
           <select
             name="category"
             value={form.category}
@@ -210,26 +209,21 @@ export default function AdminProductsPage() {
             ))}
           </select>
 
-          {/* SUBCATEGORY */}
-        <select
-  name="subcategory"
-  value={form.subcategory}
-  onChange={handleChange}
-  className="p-3 border rounded"
-  disabled={!selectedCategory}
->
-    <option value="">Select Subcategory</option>
+          <select
+            name="subcategory"
+            value={form.subcategory}
+            onChange={handleChange}
+            className="p-3 border rounded"
+            disabled={!selectedCategory}
+          >
+            <option value="">Select Subcategory</option>
+            {selectedCategory?.subcategories?.map((sub, i) => (
+              <option key={i} value={sub.slug}>
+                {sub.name}
+              </option>
+            ))}
+          </select>
 
-  {selectedCategory?.subcategories?.map((sub, i) => (
-  <option key={i} value={sub.slug}>
-    {sub.name}
-  </option>
-))}
-
-</select>
-
-
-          {/* IMAGE */}
           <input
             type="file"
             accept="image/*"

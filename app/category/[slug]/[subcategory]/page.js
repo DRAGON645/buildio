@@ -183,6 +183,47 @@ export default function SubcategoryPage() {
             </div>
           </div>
 
+          {/* 🔥 ACTIVE FILTER CHIPS */}
+          <div className="flex flex-wrap gap-2 mb-4">
+
+            {stockOnly && (
+              <button
+                onClick={() => setStockOnly(false)}
+                className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm"
+              >
+                In Stock ✕
+              </button>
+            )}
+
+            {featuredOnly && (
+              <button
+                onClick={() => setFeaturedOnly(false)}
+                className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm"
+              >
+                Featured ✕
+              </button>
+            )}
+
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm"
+              >
+                Search: {search} ✕
+              </button>
+            )}
+
+            {maxPrice < 5000 && (
+              <button
+                onClick={() => setMaxPrice(5000)}
+                className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm"
+              >
+                Price ≤ ₹{maxPrice} ✕
+              </button>
+            )}
+
+          </div>
+
           <p className="text-gray-600 mb-6">
             {filteredProducts.length} Products
           </p>

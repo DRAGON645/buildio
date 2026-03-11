@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/context/CartContext'
+import RatingStars from './RatingStars'
 
 export default function ProductCard({ product }) {
   const router = useRouter()
@@ -14,7 +15,6 @@ export default function ProductCard({ product }) {
       transition={{ type: 'spring', stiffness: 300 }}
       className="bg-white rounded-lg shadow p-4 w-64 text-black"
     >
-      {/* IMAGE */}
       {product.image ? (
         <img
           src={product.image}
@@ -31,7 +31,6 @@ export default function ProductCard({ product }) {
         </div>
       )}
 
-      {/* NAME */}
       <h3
         onClick={() => router.push(`/product/${product.id}`)}
         className="mt-3 font-semibold text-sm cursor-pointer hover:text-purple-700"
@@ -39,12 +38,13 @@ export default function ProductCard({ product }) {
         {product.name}
       </h3>
 
-      {/* PRICE */}
       <p className="text-purple-700 font-bold mt-1">
         ₹{product.price}
       </p>
 
-      {/* BUTTON */}
+      {/* ⭐ Rating */}
+      <RatingStars rating={product.rating || 0} />
+
       {product.stock === 0 ? (
         <button
           disabled
