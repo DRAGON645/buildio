@@ -3,6 +3,8 @@ import { CartProvider } from '@/context/CartContext'
 import { ProductProvider } from '@/context/ProductContext'
 import { AdminAuthProvider } from '@/context/AdminAuthContext'
 import { CategoryProvider } from '@/context/CategoryContext'
+import { BannerProvider } from '@/context/BannerContext'
+
 
 
 
@@ -18,14 +20,16 @@ export default function RootLayout({
       <body>
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
         <AdminAuthProvider>
-        <CategoryProvider>
-          <ProductProvider>
-            <CartProvider>
-              {children}
-            </CartProvider>
-          </ProductProvider>
-          </CategoryProvider>
-        </AdminAuthProvider>
+  <ProductProvider>
+    <CategoryProvider>
+      <BannerProvider>
+        <CartProvider>
+          {children}
+        </CartProvider>
+      </BannerProvider>
+    </CategoryProvider>
+  </ProductProvider>
+</AdminAuthProvider>
       </body>
     </html>
   )
