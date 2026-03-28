@@ -26,6 +26,8 @@ export default function CheckoutPage() {
 
   const [paymentMethod, setPaymentMethod] = useState('cod')
   const [showSuccess, setShowSuccess] = useState(false)
+  const [orderId, setOrderId] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -49,8 +51,9 @@ export default function CheckoutPage() {
     })
   }
 
-  // 🎉 SUCCESS FLOW
-  const handleSuccess = () => {
+  // 🎉 SUCCESS HANDLER
+  const handleSuccess = (generatedId) => {
+    setOrderId(generatedId)
     setShowSuccess(true)
     clearCart?.()
 
@@ -59,12 +62,21 @@ export default function CheckoutPage() {
     }, 3000)
   }
 
+  // 📋 COPY ORDER ID
+  const copyOrderId = () => {
+    navigator.clipboard.writeText(orderId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
   // 💳 RAZORPAY
   const payWithRazorpay = () => {
     if (!window.Razorpay) {
       alert('Razorpay SDK not loaded')
       return
     }
+
+    const generatedId = 'ORD-' + Date.now()
 
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -76,7 +88,7 @@ export default function CheckoutPage() {
       handler: async function (response) {
         try {
           const order = {
-            orderId: 'ORD-' + Date.now(),
+            orderId: generatedId,
             customer: form,
             items: selectedItems,
             total,
@@ -88,7 +100,7 @@ export default function CheckoutPage() {
           await saveOrder(order)
           await reduceStock(selectedItems)
 
-          handleSuccess()
+          handleSuccess(generatedId)
         } catch (err) {
           console.error(err)
           alert('Payment succeeded but order saving failed')
@@ -116,13 +128,15 @@ export default function CheckoutPage() {
       return
     }
 
+    const generatedId = 'ORD-' + Date.now()
+
     if (paymentMethod === 'razorpay') {
       payWithRazorpay()
       return
     }
 
     const order = {
-      orderId: 'ORD-' + Date.now(),
+      orderId: generatedId,
       customer: form,
       items: selectedItems,
       total,
@@ -134,7 +148,7 @@ export default function CheckoutPage() {
       await saveOrder(order)
       await reduceStock(selectedItems)
 
-      handleSuccess()
+      handleSuccess(generatedId)
     } catch (err) {
       console.error(err)
       alert('Failed to place order')
@@ -148,13 +162,39 @@ export default function CheckoutPage() {
       {/* 🎉 SUCCESS POPUP */}
       {showSuccess && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-xl text-center shadow-lg">
+          <div className="bg-white p-8 rounded-xl text-center shadow-lg w-80">
+
             <h2 className="text-xl font-bold text-green-600 mb-2">
-              ✅ Order Placed Successfully!
+              ✅ Order Placed!
             </h2>
-            <p className="text-gray-600">
+
+            <p className="text-gray-600 mb-3">
+              Your Order ID:
+            </p>
+
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="font-mono bg-gray-100 px-3 py-1 rounded">
+                {orderId}
+              </span>
+
+              <button
+                onClick={copyOrderId}
+                className="text-sm bg-purple-700 text-white px-2 py-1 rounded hover:bg-purple-800"
+              >
+                Copy
+              </button>
+            </div>
+
+            {copied && (
+              <p className="text-green-600 text-sm mb-2">
+                Copied!
+              </p>
+            )}
+
+            <p className="text-gray-500 text-sm">
               Redirecting to home...
             </p>
+
           </div>
         </div>
       )}
@@ -216,6 +256,7 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   className="w-full mb-3 p-3 border rounded"
                 />
+
               </div>
 
               {/* RIGHT */}
