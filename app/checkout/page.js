@@ -6,10 +6,12 @@ import { useProducts } from '@/context/ProductContext'
 import { useState } from 'react'
 import { collection, addDoc, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { useRouter } from 'next/navigation'
 
 export default function CheckoutPage() {
-  const { cart, total } = useCart()
+  const { cart, total, clearCart } = useCart()
   const { reduceStock } = useProducts()
+  const router = useRouter()
 
   const selectedItems = cart.filter(item => item.selected)
 
@@ -18,23 +20,28 @@ export default function CheckoutPage() {
     phone: '',
     address: '',
     pincode: '',
+    country: 'India',
     message: ''
   })
 
   const [paymentMethod, setPaymentMethod] = useState('cod')
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+
+    if (name === 'phone' && !/^\d*$/.test(value)) return
+    if (name === 'pincode' && !/^\d*$/.test(value)) return
+
+    setForm({ ...form, [name]: value })
   }
 
-  // ✅ REQUIRED FIELD VALIDATION
   const isFormValid =
     form.name.trim() !== '' &&
     form.phone.trim() !== '' &&
     form.address.trim() !== '' &&
     form.pincode.trim() !== ''
 
-  // 🔥 SAVE ORDER TO FIRESTORE
   const saveOrder = async (order) => {
     await addDoc(collection(db, 'orders'), {
       ...order,
@@ -42,7 +49,17 @@ export default function CheckoutPage() {
     })
   }
 
-  // 💳 RAZORPAY PAYMENT
+  // 🎉 SUCCESS FLOW
+  const handleSuccess = () => {
+    setShowSuccess(true)
+    clearCart?.()
+
+    setTimeout(() => {
+      router.push('/')
+    }, 3000)
+  }
+
+  // 💳 RAZORPAY
   const payWithRazorpay = () => {
     if (!window.Razorpay) {
       alert('Razorpay SDK not loaded')
@@ -71,7 +88,7 @@ export default function CheckoutPage() {
           await saveOrder(order)
           await reduceStock(selectedItems)
 
-          alert('Payment successful!')
+          handleSuccess()
         } catch (err) {
           console.error(err)
           alert('Payment succeeded but order saving failed')
@@ -92,36 +109,32 @@ export default function CheckoutPage() {
     rzp.open()
   }
 
-  // 📦 PLACE ORDER HANDLER
+  // 📦 PLACE ORDER
   const placeOrder = async () => {
     if (!isFormValid) {
       alert('Please fill all required delivery details')
       return
     }
 
-    // 🔥 RAZORPAY FLOW
     if (paymentMethod === 'razorpay') {
       payWithRazorpay()
       return
     }
 
-    // 📦 COD / MANUAL UPI FLOW
     const order = {
       orderId: 'ORD-' + Date.now(),
       customer: form,
       items: selectedItems,
       total,
       paymentMethod,
-      status:
-        paymentMethod === 'cod'
-          ? 'COD_PLACED'
-          : 'PAYMENT_PENDING'
+      status: 'COD_PLACED'
     }
 
     try {
       await saveOrder(order)
       await reduceStock(selectedItems)
-      alert('Order placed successfully!')
+
+      handleSuccess()
     } catch (err) {
       console.error(err)
       alert('Failed to place order')
@@ -132,6 +145,20 @@ export default function CheckoutPage() {
     <>
       <Navbar />
 
+      {/* 🎉 SUCCESS POPUP */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl text-center shadow-lg">
+            <h2 className="text-xl font-bold text-green-600 mb-2">
+              ✅ Order Placed Successfully!
+            </h2>
+            <p className="text-gray-600">
+              Redirecting to home...
+            </p>
+          </div>
+        </div>
+      )}
+
       <main className="bg-gray-50 min-h-screen text-black">
         <div className="max-w-6xl mx-auto p-6">
 
@@ -140,17 +167,12 @@ export default function CheckoutPage() {
           </h1>
 
           {selectedItems.length === 0 ? (
-            <p className="text-gray-500">
-              No products selected for checkout.
-            </p>
+            <p>No products selected.</p>
           ) : (
             <div className="grid md:grid-cols-2 gap-8">
 
-              {/* LEFT – ADDRESS FORM */}
+              {/* LEFT */}
               <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="font-semibold mb-4">
-                  Delivery Details
-                </h2>
 
                 <input
                   name="name"
@@ -159,6 +181,17 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   className="w-full mb-3 p-3 border rounded"
                 />
+
+                <select
+                  name="country"
+                  value={form.country}
+                  onChange={handleChange}
+                  className="w-full mb-3 p-3 border rounded"
+                >
+                  <option>India</option>
+                  <option>UAE</option>
+                  <option>USA</option>
+                </select>
 
                 <input
                   name="phone"
@@ -170,7 +203,7 @@ export default function CheckoutPage() {
 
                 <textarea
                   name="address"
-                  placeholder="Full Address *"
+                  placeholder="Address *"
                   value={form.address}
                   onChange={handleChange}
                   className="w-full mb-3 p-3 border rounded"
@@ -183,95 +216,36 @@ export default function CheckoutPage() {
                   onChange={handleChange}
                   className="w-full mb-3 p-3 border rounded"
                 />
-
-                <textarea
-                  name="message"
-                  placeholder="Message (optional)"
-                  value={form.message}
-                  onChange={handleChange}
-                  className="w-full p-3 border rounded"
-                />
               </div>
 
-              {/* RIGHT – ORDER SUMMARY */}
+              {/* RIGHT */}
               <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="font-semibold mb-4">
-                  Order Summary
-                </h2>
 
-                {selectedItems.map(item => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between mb-2"
-                  >
-                    <span>
-                      {item.name} × {item.qty}
-                    </span>
-                    <span>
-                      ₹{item.price * item.qty}
-                    </span>
-                  </div>
-                ))}
-
-                <hr className="my-4" />
-
-                <div className="flex justify-between font-bold">
+                <div className="flex justify-between font-bold mb-4">
                   <span>Total</span>
                   <span>₹{total}</span>
                 </div>
 
-                {/* PAYMENT METHOD */}
-                <div className="mt-6">
-                  <h3 className="font-semibold mb-3">
-                    Payment Method
-                  </h3>
+                <label className="block mb-2">
+                  <input
+                    type="radio"
+                    checked={paymentMethod === 'cod'}
+                    onChange={() => setPaymentMethod('cod')}
+                  /> COD
+                </label>
 
-                  <label className="flex items-center gap-2 mb-2">
-                    <input
-                      type="radio"
-                      checked={paymentMethod === 'cod'}
-                      onChange={() => setPaymentMethod('cod')}
-                    />
-                    Cash on Delivery
-                  </label>
+                <label className="block mb-4">
+                  <input
+                    type="radio"
+                    checked={paymentMethod === 'razorpay'}
+                    onChange={() => setPaymentMethod('razorpay')}
+                  /> Razorpay
+                </label>
 
-                  <label className="flex items-center gap-2 mb-2">
-                    <input
-                      type="radio"
-                      checked={paymentMethod === 'upi'}
-                      onChange={() => setPaymentMethod('upi')}
-                    />
-                    UPI (Manual)
-                  </label>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      checked={paymentMethod === 'razorpay'}
-                      onChange={() => setPaymentMethod('razorpay')}
-                    />
-                    Razorpay (Online Payment)
-                  </label>
-
-                  {paymentMethod === 'upi' && (
-                    <div className="mt-3 bg-gray-100 p-3 rounded text-sm">
-                      <p><strong>UPI ID:</strong> yourupi@upi</p>
-                      <p className="text-gray-600">
-                        Pay and then place order
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* PLACE ORDER */}
                 <button
-                  disabled={!isFormValid}
                   onClick={placeOrder}
-                  className={`mt-6 w-full py-3 rounded transition
-                    ${!isFormValid
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-purple-700 hover:bg-purple-800 text-white'
-                    }`}
+                  disabled={!isFormValid}
+                  className="w-full bg-purple-700 text-white py-3 rounded hover:bg-purple-800"
                 >
                   Place Order
                 </button>
