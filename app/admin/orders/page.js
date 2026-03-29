@@ -65,7 +65,6 @@ export default function AdminOrdersPage() {
           ...d.data()
         }))
 
-        // 🔔 Play sound ONLY for new orders (not first load)
         if (!firstLoadRef.current && list.length > orders.length) {
           audioRef.current?.play()
         }
@@ -83,7 +82,6 @@ export default function AdminOrdersPage() {
     return () => unsubscribe()
   }, [isAdmin, orders.length])
 
-  /* 🔁 UPDATE ORDER STATUS */
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       const ref = doc(db, 'orders', orderId)
@@ -94,7 +92,6 @@ export default function AdminOrdersPage() {
     }
   }
 
-  /* 🖨 PRINT BILL */
   const printOrder = (orderId) => {
     const printContent = document.getElementById(`order-${orderId}`)
     const originalContent = document.body.innerHTML
@@ -110,10 +107,8 @@ export default function AdminOrdersPage() {
   return (
     <main className="bg-gray-100 min-h-screen p-6 text-black">
 
-      {/* 🔔 SOUND */}
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
 
-      {/* HEADER */}
       <div className="flex justify-between items-center mb-6 print:hidden">
         <h1 className="text-3xl font-bold">Admin – Orders</h1>
 
@@ -133,21 +128,19 @@ export default function AdminOrdersPage() {
         orders.map(order => (
           <div key={order.id} className="bg-white p-6 rounded shadow mb-6">
 
-            {/* PRINTABLE BILL */}
             <div
               id={`order-${order.orderId}`}
               className="max-w-xl mx-auto border p-6"
             >
-              {/* STORE HEADER */}
-              <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold">Build.io Electronics</h2>
-                <p className="text-sm">Components & Robotics Store</p>
-                <p className="text-xs">support@buildio.com</p>
+              {/* ✅ SMALL STORE TEXT */}
+              <div className="text-center mb-2">
+                <p className="text-xs text-gray-500">
+                  Ordered from Buildio Store
+                </p>
               </div>
 
               <hr className="my-3" />
 
-              {/* ORDER INFO */}
               <div className="flex justify-between text-sm mb-3">
                 <div>
                   <p><strong>Order ID:</strong> {order.orderId}</p>
@@ -167,7 +160,6 @@ export default function AdminOrdersPage() {
 
               <hr className="my-3" />
 
-              {/* CUSTOMER INFO */}
               <div className="text-sm mb-4">
                 <p className="font-semibold">Ship To:</p>
                 <p>{order.customer.name}</p>
@@ -176,7 +168,6 @@ export default function AdminOrdersPage() {
                 <p>Pincode: {order.customer.pincode}</p>
               </div>
 
-              {/* ITEMS */}
               <table className="w-full text-sm border-collapse mb-4">
                 <thead>
                   <tr className="border-b">
@@ -198,13 +189,11 @@ export default function AdminOrdersPage() {
                 </tbody>
               </table>
 
-              {/* TOTAL */}
               <div className="flex justify-between font-bold text-sm mb-2">
                 <span>Total</span>
                 <span>₹{order.total}</span>
               </div>
 
-              {/* 🔥 STATUS (ADMIN ONLY, NO PRINT) */}
               <div className="mt-3 print:hidden">
                 <div className="flex items-center gap-3">
                   <span
@@ -245,7 +234,6 @@ export default function AdminOrdersPage() {
               </p>
             </div>
 
-            {/* ACTIONS */}
             <div className="mt-4 flex justify-end print:hidden">
               <button
                 onClick={() => printOrder(order.orderId)}
