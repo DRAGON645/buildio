@@ -51,11 +51,33 @@ export default function CheckoutPage() {
     })
   }
 
+  // ✅ WhatsApp → SEND TO YOUR NUMBER
+  const sendWhatsAppMessage = (orderId) => {
+    const message = `🛒 *New Order Received!*
+
+🧾 Order ID: ${orderId}
+👤 Name: ${form.name}
+📞 Phone: ${form.phone}
+💰 Total: ₹${total}
+
+📍 Address:
+${form.address}
+Pincode: ${form.pincode}
+
+🚀 Check admin panel for full details.`
+
+    const url = `https://wa.me/919360977642?text=${encodeURIComponent(message)}`
+    window.open(url, '_blank')
+  }
+
   // 🎉 SUCCESS HANDLER
   const handleSuccess = (generatedId) => {
     setOrderId(generatedId)
     setShowSuccess(true)
     clearCart?.()
+
+    // 📩 Send to YOUR WhatsApp
+    sendWhatsAppMessage(generatedId)
 
     setTimeout(() => {
       router.push('/')
@@ -214,48 +236,19 @@ export default function CheckoutPage() {
               {/* LEFT */}
               <div className="bg-white p-6 rounded-lg shadow">
 
-                <input
-                  name="name"
-                  placeholder="Full Name *"
-                  value={form.name}
-                  onChange={handleChange}
-                  className="w-full mb-3 p-3 border rounded"
-                />
+                <input name="name" placeholder="Full Name *" value={form.name} onChange={handleChange} className="w-full mb-3 p-3 border rounded" />
 
-                <select
-                  name="country"
-                  value={form.country}
-                  onChange={handleChange}
-                  className="w-full mb-3 p-3 border rounded"
-                >
+                <select name="country" value={form.country} onChange={handleChange} className="w-full mb-3 p-3 border rounded">
                   <option>India</option>
                   <option>UAE</option>
                   <option>USA</option>
                 </select>
 
-                <input
-                  name="phone"
-                  placeholder="Phone Number *"
-                  value={form.phone}
-                  onChange={handleChange}
-                  className="w-full mb-3 p-3 border rounded"
-                />
+                <input name="phone" placeholder="Phone Number *" value={form.phone} onChange={handleChange} className="w-full mb-3 p-3 border rounded" />
 
-                <textarea
-                  name="address"
-                  placeholder="Address *"
-                  value={form.address}
-                  onChange={handleChange}
-                  className="w-full mb-3 p-3 border rounded"
-                />
+                <textarea name="address" placeholder="Address *" value={form.address} onChange={handleChange} className="w-full mb-3 p-3 border rounded" />
 
-                <input
-                  name="pincode"
-                  placeholder="Pincode *"
-                  value={form.pincode}
-                  onChange={handleChange}
-                  className="w-full mb-3 p-3 border rounded"
-                />
+                <input name="pincode" placeholder="Pincode *" value={form.pincode} onChange={handleChange} className="w-full mb-3 p-3 border rounded" />
 
               </div>
 
@@ -268,26 +261,14 @@ export default function CheckoutPage() {
                 </div>
 
                 <label className="block mb-2">
-                  <input
-                    type="radio"
-                    checked={paymentMethod === 'cod'}
-                    onChange={() => setPaymentMethod('cod')}
-                  /> COD
+                  <input type="radio" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} /> COD
                 </label>
 
                 <label className="block mb-4">
-                  <input
-                    type="radio"
-                    checked={paymentMethod === 'razorpay'}
-                    onChange={() => setPaymentMethod('razorpay')}
-                  /> Razorpay
+                  <input type="radio" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} /> Razorpay
                 </label>
 
-                <button
-                  onClick={placeOrder}
-                  disabled={!isFormValid}
-                  className="w-full bg-purple-700 text-white py-3 rounded hover:bg-purple-800"
-                >
+                <button onClick={placeOrder} disabled={!isFormValid} className="w-full bg-purple-700 text-white py-3 rounded hover:bg-purple-800">
                   Place Order
                 </button>
 

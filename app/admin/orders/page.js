@@ -24,7 +24,6 @@ export default function AdminOrdersPage() {
   const audioRef = useRef(null)
   const firstLoadRef = useRef(true)
 
-  /* 🔐 Protect route */
   useEffect(() => {
     if (!isAdmin) {
       localStorage.setItem('adminRedirect', '/admin/orders')
@@ -32,23 +31,16 @@ export default function AdminOrdersPage() {
     }
   }, [isAdmin, router])
 
-  /* 🎨 STATUS COLOR HELPER */
   const getStatusColor = (status) => {
     switch (status) {
-      case 'PLACED':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'PACKED':
-        return 'bg-blue-100 text-blue-800'
-      case 'SHIPPED':
-        return 'bg-purple-100 text-purple-800'
-      case 'DELIVERED':
-        return 'bg-green-100 text-green-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+      case 'PLACED': return 'bg-yellow-100 text-yellow-800'
+      case 'PACKED': return 'bg-blue-100 text-blue-800'
+      case 'SHIPPED': return 'bg-purple-100 text-purple-800'
+      case 'DELIVERED': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   }
 
-  /* 🔥 REALTIME ORDERS */
   useEffect(() => {
     if (!isAdmin) return
 
@@ -57,27 +49,20 @@ export default function AdminOrdersPage() {
       orderBy('createdAt', 'desc')
     )
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const list = snapshot.docs.map(d => ({
-          id: d.id,
-          ...d.data()
-        }))
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const list = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }))
 
-        if (!firstLoadRef.current && list.length > orders.length) {
-          audioRef.current?.play()
-        }
-
-        setOrders(list)
-        setLoading(false)
-        firstLoadRef.current = false
-      },
-      (error) => {
-        console.error('Realtime orders error:', error)
-        setLoading(false)
+      if (!firstLoadRef.current && list.length > orders.length) {
+        audioRef.current?.play()
       }
-    )
+
+      setOrders(list)
+      setLoading(false)
+      firstLoadRef.current = false
+    })
 
     return () => unsubscribe()
   }, [isAdmin, orders.length])
@@ -102,7 +87,146 @@ export default function AdminOrdersPage() {
     window.location.reload()
   }
 
+  // 📲 WhatsApp Message Function
+  const sendWhatsApp = (order) => {
+    const message = `Hello 👋
+
+Your order has been confirmed!
+
+🧾 Order ID: ${order.orderId}
+💰 Total: ₹${order.total}
+
+We will process it soon 🚀`
+
+    const phone = order.customer.phone.replace(/\D/g, '')
+    const url = `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`
+    window.open(url, '_blank')
+  }
+
+  // 📅 Group Orders by Date
+  const groupOrders = () => {
+    const groups = { today: [], yesterday: [], older: [] }
+
+    const today = new Date()
+    const yesterday = new Date()
+    yesterday.setDate(today.getDate() - 1)
+
+    orders.forEach(order => {
+      const date = order.createdAt?.toDate()
+      if (!date) return
+
+      if (date.toDateString() === today.toDateString()) {
+        groups.today.push(order)
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        groups.yesterday.push(order)
+      } else {
+        groups.older.push(order)
+      }
+    })
+
+    return groups
+  }
+
   if (!isAdmin) return null
+
+  const grouped = groupOrders()
+
+  const renderOrders = (list) => (
+    list.map(order => (
+      <div key={order.id} className="bg-white p-6 rounded shadow mb-6">
+
+        <div id={`order-${order.orderId}`} className="max-w-xl mx-auto border p-6">
+
+          <div className="text-center mb-2">
+            <p className="text-xs text-gray-500">
+              Ordered from Buildio Store
+            </p>
+          </div>
+
+          <hr className="my-3" />
+
+          <div className="flex justify-between text-sm mb-3">
+            <div>
+              <p><strong>Order ID:</strong> {order.orderId}</p>
+              <p><strong>Date:</strong> {order.createdAt?.toDate().toLocaleString()}</p>
+            </div>
+
+            <Barcode value={order.orderId} height={40} width={1.2} fontSize={12} />
+          </div>
+
+          <hr className="my-3" />
+
+          <div className="text-sm mb-4">
+            <p className="font-semibold">Ship To:</p>
+            <p>{order.customer.name}</p>
+            <p>{order.customer.phone}</p>
+            <p>{order.customer.address}</p>
+            <p>Pincode: {order.customer.pincode}</p>
+          </div>
+
+          <table className="w-full text-sm border-collapse mb-4">
+            <tbody>
+              {order.items.map(item => (
+                <tr key={item.id} className="border-b">
+                  <td>{item.name}</td>
+                  <td className="text-center">{item.qty}</td>
+                  <td className="text-right">₹{item.price * item.qty}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="flex justify-between font-bold text-sm mb-2">
+            <span>Total</span>
+            <span>₹{order.total}</span>
+          </div>
+
+          <div className="mt-3 print:hidden flex items-center gap-3">
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
+              {order.status}
+            </span>
+
+            <select
+              value={order.status}
+              onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+              className="p-2 border rounded text-sm"
+            >
+              <option value="PLACED">Placed</option>
+              <option value="PACKED">Packed</option>
+              <option value="SHIPPED">Shipped</option>
+              <option value="DELIVERED">Delivered</option>
+            </select>
+          </div>
+
+          <p className="text-sm mt-2">
+            <strong>Payment:</strong> {order.paymentMethod}
+          </p>
+
+          <hr className="my-3" />
+
+          <p className="text-center text-xs">
+            Thank you for shopping with us!
+          </p>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-3 print:hidden">
+          <button
+            onClick={() => sendWhatsApp(order)}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            📲 Message Customer
+          </button>
+
+          <button
+            onClick={() => printOrder(order.orderId)}
+            className="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-800"
+          >
+            Print Bill
+          </button>
+        </div>
+      </div>
+    ))
+  )
 
   return (
     <main className="bg-gray-100 min-h-screen p-6 text-black">
@@ -111,139 +235,34 @@ export default function AdminOrdersPage() {
 
       <div className="flex justify-between items-center mb-6 print:hidden">
         <h1 className="text-3xl font-bold">Admin – Orders</h1>
-
-        <button
-          onClick={logout}
-          className="text-red-600 hover:underline"
-        >
-          Logout
-        </button>
+        <button onClick={logout} className="text-red-600 hover:underline">Logout</button>
       </div>
 
       {loading ? (
-        <p className="text-gray-500">Loading orders...</p>
-      ) : orders.length === 0 ? (
-        <p className="text-gray-500">No orders yet.</p>
+        <p>Loading...</p>
       ) : (
-        orders.map(order => (
-          <div key={order.id} className="bg-white p-6 rounded shadow mb-6">
+        <>
+          {grouped.today.length > 0 && (
+            <>
+              <h2 className="text-xl font-bold mb-3">📅 Today</h2>
+              {renderOrders(grouped.today)}
+            </>
+          )}
 
-            <div
-              id={`order-${order.orderId}`}
-              className="max-w-xl mx-auto border p-6"
-            >
-              {/* ✅ SMALL STORE TEXT */}
-              <div className="text-center mb-2">
-                <p className="text-xs text-gray-500">
-                  Ordered from Buildio Store
-                </p>
-              </div>
+          {grouped.yesterday.length > 0 && (
+            <>
+              <h2 className="text-xl font-bold mb-3">📅 Yesterday</h2>
+              {renderOrders(grouped.yesterday)}
+            </>
+          )}
 
-              <hr className="my-3" />
-
-              <div className="flex justify-between text-sm mb-3">
-                <div>
-                  <p><strong>Order ID:</strong> {order.orderId}</p>
-                  <p>
-                    <strong>Date:</strong>{' '}
-                    {order.createdAt?.toDate().toLocaleString()}
-                  </p>
-                </div>
-
-                <Barcode
-                  value={order.orderId}
-                  height={40}
-                  width={1.2}
-                  fontSize={12}
-                />
-              </div>
-
-              <hr className="my-3" />
-
-              <div className="text-sm mb-4">
-                <p className="font-semibold">Ship To:</p>
-                <p>{order.customer.name}</p>
-                <p>{order.customer.phone}</p>
-                <p>{order.customer.address}</p>
-                <p>Pincode: {order.customer.pincode}</p>
-              </div>
-
-              <table className="w-full text-sm border-collapse mb-4">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-1">Item</th>
-                    <th className="text-center py-1">Qty</th>
-                    <th className="text-right py-1">Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {order.items.map(item => (
-                    <tr key={item.id} className="border-b">
-                      <td className="py-1">{item.name}</td>
-                      <td className="text-center py-1">{item.qty}</td>
-                      <td className="text-right py-1">
-                        ₹{item.price * item.qty}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="flex justify-between font-bold text-sm mb-2">
-                <span>Total</span>
-                <span>₹{order.total}</span>
-              </div>
-
-              <div className="mt-3 print:hidden">
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}
-                  >
-                    {order.status}
-                  </span>
-
-                  <select
-                    value={order.status}
-                    onChange={(e) =>
-                      updateOrderStatus(order.id, e.target.value)
-                    }
-                    className="p-2 border rounded text-sm"
-                  >
-                    <option value="PLACED">Placed</option>
-                    <option value="PACKED">Packed</option>
-                    <option value="SHIPPED">Shipped</option>
-                    <option value="DELIVERED">Delivered</option>
-                  </select>
-                </div>
-              </div>
-
-              <p className="text-sm mt-2">
-                <strong>Payment:</strong> {order.paymentMethod}
-              </p>
-
-              {order.customer.message && (
-                <p className="text-sm mt-2">
-                  <strong>Customer Note:</strong> {order.customer.message}
-                </p>
-              )}
-
-              <hr className="my-3" />
-
-              <p className="text-center text-xs">
-                Thank you for shopping with us!
-              </p>
-            </div>
-
-            <div className="mt-4 flex justify-end print:hidden">
-              <button
-                onClick={() => printOrder(order.orderId)}
-                className="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-800"
-              >
-                Print Bill
-              </button>
-            </div>
-          </div>
-        ))
+          {grouped.older.length > 0 && (
+            <>
+              <h2 className="text-xl font-bold mb-3">📅 Older</h2>
+              {renderOrders(grouped.older)}
+            </>
+          )}
+        </>
       )}
     </main>
   )
